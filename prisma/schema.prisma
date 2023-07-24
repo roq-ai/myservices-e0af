@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions", "postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  extensions      = [pgcrypto]
+}
+
+model address {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  street      String    @db.VarChar(255)
+  city        String    @db.VarChar(255)
+  state       String    @db.VarChar(255)
+  zip         String    @db.VarChar(255)
+  customer_id String?   @db.Uuid
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime  @default(now()) @db.Timestamp(6)
+  customer    customer? @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model customer {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description String?     @db.VarChar(255)
+  image       String?     @db.VarChar(255)
+  name        String      @db.VarChar(255)
+  created_at  DateTime    @default(now()) @db.Timestamp(6)
+  updated_at  DateTime    @default(now()) @db.Timestamp(6)
+  user_id     String      @db.Uuid
+  tenant_id   String      @db.VarChar(255)
+  address     address[]
+  user        user        @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  equipment   equipment[]
+}
+
+model equipment {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String    @db.VarChar(255)
+  customer_id String?   @db.Uuid
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime  @default(now()) @db.Timestamp(6)
+  customer    customer? @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  visit       visit[]
+}
+
+model procedure {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?  @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  visit       visit[]
+}
+
+model user {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email       String     @unique @db.VarChar(255)
+  firstName   String?    @db.VarChar(255)
+  lastName    String?    @db.VarChar(255)
+  roq_user_id String     @db.VarChar(255)
+  tenant_id   String     @db.VarChar(255)
+  created_at  DateTime   @default(now()) @db.Timestamp(6)
+  updated_at  DateTime   @default(now()) @db.Timestamp(6)
+  customer    customer[]
+}
+
+model visit {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  visit_date   DateTime   @db.Date
+  equipment_id String?    @db.Uuid
+  procedure_id String?    @db.Uuid
+  created_at   DateTime   @default(now()) @db.Timestamp(6)
+  updated_at   DateTime   @default(now()) @db.Timestamp(6)
+  equipment    equipment? @relation(fields: [equipment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  procedure    procedure? @relation(fields: [procedure_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
